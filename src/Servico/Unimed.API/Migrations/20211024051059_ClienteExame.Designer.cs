@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Unimed.API.Repositorio.Data;
 
 namespace Unimed.API.Migrations
 {
     [DbContext(typeof(UnimedContext))]
-    partial class UnimedContextModelSnapshot : ModelSnapshot
+    [Migration("20211024051059_ClienteExame")]
+    partial class ClienteExame
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

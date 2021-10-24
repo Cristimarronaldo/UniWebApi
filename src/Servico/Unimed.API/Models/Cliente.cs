@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using FluentValidation.Results;
 using System;
+using System.Collections.Generic;
 using Unimed.API.DomainObjects;
 
 namespace Unimed.API.Models
@@ -15,7 +16,7 @@ namespace Unimed.API.Models
         public Endereco Endereco { get; private set; }
 
         public Plano Plano { get; private set; }
-        public ClienteExame ClienteExame { get; private set; }
+        public List<ClienteExame> ClienteExame { get; private set; }
 
         public ValidationResult ValidationResult { get; set; }
 

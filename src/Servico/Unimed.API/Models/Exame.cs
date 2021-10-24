@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using FluentValidation.Results;
 using System;
+using System.Collections.Generic;
 using Unimed.API.DomainObjects;
 
 namespace Unimed.API.Models
@@ -8,7 +9,7 @@ namespace Unimed.API.Models
     public class Exame : Entity
     {
         public string Descricao { get; private set; }
-        public ClienteExame ClienteExame { get; private set; }
+        public List<ClienteExame> ClienteExame { get; private set; }
 
         //EF
         public Exame() { }
