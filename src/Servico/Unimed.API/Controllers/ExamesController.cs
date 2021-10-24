@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Unimed.API.Domain.Interfaces;
 using Unimed.API.Models;
@@ -37,21 +38,28 @@ namespace Unimed.API.Controllers
         }
 
         [HttpPost("exames")]
-        public async Task<IActionResult> AdicionarExame([FromBody] ExameDTO exame)
+        public async Task<IActionResult> AdicionarExame([FromBody] ExameDTO exameDTO)
         {
-            _exameDomain.Adicionar(AutoMapperManual(exame));
+            exameDTO.Id = Guid.Empty;
+            var exame = AutoMapperManual(exameDTO);
+            if (!ValidarExame(exame)) return CustomizacaoResponse();
+
+            _exameDomain.Adicionar(exame);
             await _context.SaveChangesAsync();
             return CustomizacaoResponse();
         }
 
         [HttpPut("exames/id:Guid")]
-        public async Task<IActionResult> AlterarExame([FromQuery] Guid id, [FromBody] ExameDTO exame)
+        public async Task<IActionResult> AlterarExame([FromQuery] Guid id, [FromBody] ExameDTO exameDTO)
         {
             if (string.IsNullOrEmpty(id.ToString())) return NotFound();
 
-            if (id != exame.Id) return NotFound();
+            if (id != exameDTO.Id) return NotFound();
 
-            _exameDomain.Alterar(AutoMapperManual(exame));
+            var exame = AutoMapperManual(exameDTO);
+            if (!ValidarExame(exame)) return CustomizacaoResponse();
+
+            _exameDomain.Alterar(exame);
             await _context.SaveChangesAsync();
             return CustomizacaoResponse();
         }
@@ -70,6 +78,14 @@ namespace Unimed.API.Controllers
         private ExameDTO AutoMapperManual(Exame exame)
         {
             return new ExameDTO { Id = exame.Id, Descricao = exame.Descricao };
+        }
+
+        private bool ValidarExame(Exame exame)
+        {
+            if (exame.EhValido()) return true;
+
+            exame.ValidationResult.Errors.ToList().ForEach(e => AdicionarErroProcessamento(e.ErrorMessage));
+            return false;
         }
     }
 }

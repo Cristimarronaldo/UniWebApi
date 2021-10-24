@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FluentValidation.Results;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,16 +10,16 @@ namespace Unimed.API.Domain
 {
     public class ClienteExameDomain : IClienteExameDomain
     {
-        private readonly IClienteExameRepository _clienteExameRepository;
+        private readonly IClienteExameRepository _clienteExameRepository;        
 
         public ClienteExameDomain(IClienteExameRepository clienteExameRepository)
         {
-            _clienteExameRepository = clienteExameRepository;
+            _clienteExameRepository = clienteExameRepository;            
         }
 
         public void Adicionar(ClienteExame clienteExame)
-        {
-            _clienteExameRepository.Adicionar(clienteExame);
+        {            
+            _clienteExameRepository.Adicionar(clienteExame);           
         }
 
         public void Alterar(ClienteExame clienteExame)

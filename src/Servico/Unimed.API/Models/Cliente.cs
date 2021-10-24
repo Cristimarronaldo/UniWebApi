@@ -24,7 +24,7 @@ namespace Unimed.API.Models
 
         public Cliente(Guid id, string nome, string cpf, DateTime dataNascimento, string nomeMae, Guid planoId)
         {
-            Id = id;
+            Id = id != Guid.Empty ? id : Id;
             Nome = nome;
             CPF = cpf;
             DataNascimento = dataNascimento;

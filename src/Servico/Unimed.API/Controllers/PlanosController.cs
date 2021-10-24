@@ -41,6 +41,7 @@ namespace Unimed.API.Controllers
         [HttpPost("planos")]
         public async Task<IActionResult> AdicionarPlano([FromBody] PlanoDTO planoDTO)
         {
+            planoDTO.Id = Guid.Empty;
             var plano = AutoMapperManual(planoDTO);
             if (!ValidarPlano(plano)) return CustomizacaoResponse();
 

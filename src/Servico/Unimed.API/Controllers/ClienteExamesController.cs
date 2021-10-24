@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Unimed.API.Domain.Interfaces;
 using Unimed.API.Models;
@@ -13,10 +14,17 @@ namespace Unimed.API.Controllers
     {
         private readonly IClienteExameDomain _clienteExamesDomain;
         private readonly UnimedContext _context;
+        private readonly IClienteDomain _clienteDomain;
+        private readonly IExameDomain _exameDomain;
 
-        public ClienteExamesController(IClienteExameDomain clienteExameDomain, UnimedContext context)
+        public ClienteExamesController(IClienteExameDomain clienteExameDomain, 
+                                       IClienteDomain clienteDomain,
+                                       IExameDomain exameDomain,
+                                       UnimedContext context)
         {
             _clienteExamesDomain = clienteExameDomain;
+            _clienteDomain = clienteDomain;
+            _exameDomain = exameDomain;
             _context = context;
         }
 
@@ -37,25 +45,32 @@ namespace Unimed.API.Controllers
         }
 
         [HttpPost("clienteExames")]
-        public async Task<IActionResult> AdicionarClienteExames([FromBody] ClienteExameDTO clienteExame)
+        public async Task<IActionResult> AdicionarClienteExames([FromBody] ClienteExameDTO clienteExameDTO)
         {
-            clienteExame.DataExame = DateTime.Now;
-            _clienteExamesDomain.Adicionar(AutoMapperManual(clienteExame));
+            clienteExameDTO.Id = Guid.Empty;
+            clienteExameDTO.DataExame = DateTime.Now;
+            var clienteExame = AutoMapperManual(clienteExameDTO);
+            if (!ValidarClienteExame(clienteExame)) return CustomizacaoResponse();
+
+            _clienteExamesDomain.Adicionar(clienteExame);
             await _context.SaveChangesAsync();
             return CustomizacaoResponse();
         }
 
         [HttpPut("clienteExames/id:Guid")]
-        public async Task<IActionResult> AlterarClienteExames([FromQuery] Guid id, [FromBody] ClienteExameDTO clienteExame)
+        public async Task<IActionResult> AlterarClienteExames([FromQuery] Guid id, [FromBody] ClienteExameDTO clienteExameDTO)
         {
             if (string.IsNullOrEmpty(id.ToString())) return NotFound();
 
-            if (id != clienteExame.Id) return NotFound();
+            if (id != clienteExameDTO.Id) return NotFound();
 
             var clienteExameBD = _clienteExamesDomain.ObterPorId(id).Result;
-            clienteExame.DataExame = clienteExameBD.DataExame;
+            clienteExameDTO.DataExame = clienteExameBD.DataExame;
 
-            _clienteExamesDomain.Alterar(AutoMapperManual(clienteExame));
+            var clienteExame = AutoMapperManual(clienteExameDTO);
+            if (!ValidarClienteExame(clienteExame)) return CustomizacaoResponse();
+
+            _clienteExamesDomain.Alterar(clienteExame);
             await _context.SaveChangesAsync();
             return CustomizacaoResponse();
         }
@@ -81,6 +96,23 @@ namespace Unimed.API.Controllers
                 ClienteId = clienteExame.ClienteId,
                 ExameId = clienteExame.ExameId
             };
+        }
+
+        private bool ValidarClienteExame(ClienteExame cliente)
+        {                       
+            var clienteDB = _clienteDomain.ObterPorId(cliente.ClienteId).Result;
+
+            if (clienteDB == null) AdicionarErroProcessamento("Cliente não exisnte");
+            
+            var exameDB = _exameDomain.ObterPorId(cliente.ExameId).Result;
+            if (exameDB == null) AdicionarErroProcessamento("Exame não existente");
+
+            if (!OperacaoValida()) return false;
+
+            if (cliente.EhValido()) return true;
+
+            cliente.ValidationResult.Errors.ToList().ForEach(e => AdicionarErroProcessamento(e.ErrorMessage));
+            return false;
         }
 
     }

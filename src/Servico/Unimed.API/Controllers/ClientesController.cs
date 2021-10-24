@@ -41,6 +41,7 @@ namespace Unimed.API.Controllers
         [HttpPost("clientes")]
         public async Task<IActionResult> AdicionarCliente([FromBody] ClienteDTO clienteDTO)
         {
+            clienteDTO.Id = Guid.Empty;
             var cliente = AutoMapperManual(clienteDTO);
             
             if (!ValidarCliente(cliente)) return CustomizacaoResponse();
@@ -58,7 +59,7 @@ namespace Unimed.API.Controllers
             if (id != clienteDTO.Id) return NotFound();
 
             var cliente = AutoMapperManual(clienteDTO);
-            if (!OperacaoValida()) return CustomizacaoResponse();
+            if (!ValidarCliente(cliente)) return CustomizacaoResponse();
 
             _clienteDomain.Alterar(cliente);
             await _context.SaveChangesAsync();
@@ -77,8 +78,9 @@ namespace Unimed.API.Controllers
         [HttpPost("clientesEndereco")]
         public async Task<IActionResult> AdicionarEndereco([FromBody] EnderecoDTO enderecoDTO)
         {
+            enderecoDTO.Id = Guid.Empty;
             var endereco = AutoMapperManual(enderecoDTO);
-            if (!OperacaoValida()) return CustomizacaoResponse();
+            if (!ValidarEndereco(endereco)) return CustomizacaoResponse();
 
             _clienteDomain.AdicionarEndereco(endereco);
             await _context.SaveChangesAsync();
@@ -86,14 +88,14 @@ namespace Unimed.API.Controllers
         }
 
         [HttpPut("clientesEndereco/id:Guid")]
-        public async Task<IActionResult> AdicionarPlano([FromQuery] Guid id, [FromBody] EnderecoDTO enderecoDTO)
+        public async Task<IActionResult> AlterarEndereco([FromQuery] Guid id, [FromBody] EnderecoDTO enderecoDTO)
         {
             if (string.IsNullOrEmpty(id.ToString())) return NotFound();
 
             if (id != enderecoDTO.Id) return NotFound();
 
             var endereco = AutoMapperManual(enderecoDTO);
-            if (!OperacaoValida()) return CustomizacaoResponse();
+            if (!ValidarEndereco(endereco)) return CustomizacaoResponse();
 
             _clienteDomain.AlterarEndereco(endereco);
             await _context.SaveChangesAsync();
@@ -143,7 +145,7 @@ namespace Unimed.API.Controllers
         }
 
         private bool ValidarCliente(Cliente cliente)
-        {
+        {            
             var plano = _planoDomain.ObterPorId(cliente.PlanoId).Result;
             if (plano == null) AdicionarErroProcessamento("Não existe esse plano");
 

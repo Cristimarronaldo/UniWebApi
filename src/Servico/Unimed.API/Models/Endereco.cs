@@ -22,7 +22,7 @@ namespace Unimed.API.Models
         public Endereco(Guid id, string logradouro, string numero, string complemento, string bairro, 
                         string cep, string cidade, string estado, Guid clienteId)
         {
-            Id = id;
+            Id = id != Guid.Empty ? id : Id;
             Logradouro = logradouro;
             Numero = numero;
             Complemento = complemento;

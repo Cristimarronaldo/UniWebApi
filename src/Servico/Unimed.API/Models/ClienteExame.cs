@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using FluentValidation;
+using FluentValidation.Results;
+using System;
 using Unimed.API.DomainObjects;
 
 namespace Unimed.API.Models
@@ -20,11 +19,43 @@ namespace Unimed.API.Models
 
         public ClienteExame(Guid id, Guid clienteId, Guid exameId, string nomeMedico, DateTime dataExame)
         {
-            Id = id;
+            Id = id != Guid.Empty ? id : Id;
             ClienteId = clienteId;
             ExameId = exameId;
             NomeMedico = nomeMedico;
             DataExame = dataExame;
+        }
+
+        public ValidationResult ValidationResult { get; set; }
+
+        public bool EhValido()
+        {
+            ValidationResult = new ClienteExameValidation().Validate(this);
+
+            return ValidationResult.IsValid;
+        }
+
+        public class ClienteExameValidation : AbstractValidator<ClienteExame>
+        {
+            public ClienteExameValidation()
+            {
+                RuleFor(c => c.Id)
+                    .NotEqual(Guid.Empty)
+                    .WithMessage("Código do ClienteExame inválido");
+
+                RuleFor(c => c.ClienteId)
+                     .NotEmpty()
+                     .WithMessage("Cliente não informado");
+
+                RuleFor(c => c.ExameId)
+                    .NotEmpty()
+                    .WithMessage("Exame não informado");
+
+                RuleFor(c => c.NomeMedico)
+                    .NotEmpty()
+                    .WithMessage("Nome do médico não informado");               
+
+            }
         }
     }
 }

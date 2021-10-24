@@ -20,7 +20,7 @@ namespace Unimed.API.Models
 
         public Plano(Guid id, string numeroPlano, string nomePlano)
         {
-            Id = id;
+            Id = id != Guid.Empty ? id : Id;
             NumeroPlano = numeroPlano;
             NomePlano = nomePlano;
         }
