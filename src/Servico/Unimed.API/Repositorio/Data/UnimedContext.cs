@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using FluentValidation.Results;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,7 +35,9 @@ namespace Unimed.API.Repositorio.Data
             foreach (var relationship in modelBuilder.Model.GetEntityTypes()
                 .SelectMany(e => e.GetForeignKeys())) relationship.DeleteBehavior = DeleteBehavior.ClientSetNull;
 
-           modelBuilder.ApplyConfigurationsFromAssembly(typeof(UnimedContext).Assembly);
+            modelBuilder.Ignore<ValidationResult>();
+
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(UnimedContext).Assembly);
         }       
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Unimed.API.Domain.Interfaces;
 using Unimed.API.Models;
@@ -11,12 +12,14 @@ namespace Unimed.API.Controllers
     public class ClientesController : MainController
     {
         private readonly IClienteDomain _clienteDomain;
+        private readonly IPlanoDomain _planoDomain;
         private readonly UnimedContext _context;
 
-        public ClientesController(IClienteDomain clienteDomain, UnimedContext context)
+        public ClientesController(IClienteDomain clienteDomain, IPlanoDomain planoDomain , UnimedContext context)
         {
             _context = context;
             _clienteDomain = clienteDomain;
+            _planoDomain = planoDomain;
         }
 
         [HttpGet("clientes")]
@@ -36,21 +39,28 @@ namespace Unimed.API.Controllers
         }
 
         [HttpPost("clientes")]
-        public async Task<IActionResult> AdicionarCliente([FromBody] ClienteDTO cliente)
+        public async Task<IActionResult> AdicionarCliente([FromBody] ClienteDTO clienteDTO)
         {
-            _clienteDomain.Adicionar(AutoMapperManual(cliente));
+            var cliente = AutoMapperManual(clienteDTO);
+            
+            if (!ValidarCliente(cliente)) return CustomizacaoResponse();
+
+            _clienteDomain.Adicionar(cliente);
             await _context.SaveChangesAsync();
             return CustomizacaoResponse();
         }
 
         [HttpPut("clientes/id:Guid")]
-        public async Task<IActionResult> AlterarCliente([FromQuery] Guid id, [FromBody] ClienteDTO cliente)
+        public async Task<IActionResult> AlterarCliente([FromQuery] Guid id, [FromBody] ClienteDTO clienteDTO)
         {
             if (string.IsNullOrEmpty(id.ToString())) return NotFound();
 
-            if (id != cliente.Id) return NotFound();
+            if (id != clienteDTO.Id) return NotFound();
 
-            _clienteDomain.Alterar(AutoMapperManual(cliente));
+            var cliente = AutoMapperManual(clienteDTO);
+            if (!OperacaoValida()) return CustomizacaoResponse();
+
+            _clienteDomain.Alterar(cliente);
             await _context.SaveChangesAsync();
             return CustomizacaoResponse();
         }
@@ -65,21 +75,27 @@ namespace Unimed.API.Controllers
         }
 
         [HttpPost("clientesEndereco")]
-        public async Task<IActionResult> AdicionarEndereco([FromBody] EnderecoDTO endereco)
+        public async Task<IActionResult> AdicionarEndereco([FromBody] EnderecoDTO enderecoDTO)
         {
-            _clienteDomain.AdicionarEndereco(AutoMapperManual(endereco));
+            var endereco = AutoMapperManual(enderecoDTO);
+            if (!OperacaoValida()) return CustomizacaoResponse();
+
+            _clienteDomain.AdicionarEndereco(endereco);
             await _context.SaveChangesAsync();
             return CustomizacaoResponse();
         }
 
         [HttpPut("clientesEndereco/id:Guid")]
-        public async Task<IActionResult> AdicionarPlano([FromQuery] Guid id, [FromBody] EnderecoDTO endereco)
+        public async Task<IActionResult> AdicionarPlano([FromQuery] Guid id, [FromBody] EnderecoDTO enderecoDTO)
         {
             if (string.IsNullOrEmpty(id.ToString())) return NotFound();
 
-            if (id != endereco.Id) return NotFound();
+            if (id != enderecoDTO.Id) return NotFound();
 
-            _clienteDomain.AlterarEndereco(AutoMapperManual(endereco));
+            var endereco = AutoMapperManual(enderecoDTO);
+            if (!OperacaoValida()) return CustomizacaoResponse();
+
+            _clienteDomain.AlterarEndereco(endereco);
             await _context.SaveChangesAsync();
             return CustomizacaoResponse();
         }
@@ -124,6 +140,25 @@ namespace Unimed.API.Controllers
                                 Bairro = endereco.Bairro,
                                 Cep = endereco.Cep, Cidade = endereco.Cidade, Estado = endereco.Estado,
                                 ClienteId = endereco.ClienteId};
+        }
+
+        private bool ValidarCliente(Cliente cliente)
+        {
+            var plano = _planoDomain.ObterPorId(cliente.PlanoId).Result;
+            if (plano == null) AdicionarErroProcessamento("Não existe esse plano");
+
+            if (cliente.EhValido()) return true;
+
+            cliente.ValidationResult.Errors.ToList().ForEach(e => AdicionarErroProcessamento(e.ErrorMessage));
+            return false;
+        }
+
+        private bool ValidarEndereco(Endereco endereco)
+        {
+            if (endereco.EhValido()) return true;
+
+            endereco.ValidationResult.Errors.ToList().ForEach(e => AdicionarErroProcessamento(e.ErrorMessage));
+            return false;
         }
     }
 }

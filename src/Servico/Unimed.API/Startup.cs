@@ -11,6 +11,7 @@ using Microsoft.OpenApi.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Unimed.API.Domain;
 using Unimed.API.Domain.Interfaces;
@@ -48,6 +49,7 @@ namespace Unimed.API
             .AddJsonOptions(opts => { opts.JsonSerializerOptions.PropertyNamingPolicy = null;                
                 opts.JsonSerializerOptions.MaxDepth = 0;
                 opts.JsonSerializerOptions.PropertyNameCaseInsensitive = false;
+                opts.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
             });
 
             //services.AddControllers();

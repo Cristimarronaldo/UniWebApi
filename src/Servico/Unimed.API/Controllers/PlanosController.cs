@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Unimed.API.Domain.Interfaces;
 using Unimed.API.Models;
@@ -38,21 +39,27 @@ namespace Unimed.API.Controllers
         }
 
         [HttpPost("planos")]
-        public async Task<IActionResult> AdicionarPlano([FromBody] PlanoDTO plano)
+        public async Task<IActionResult> AdicionarPlano([FromBody] PlanoDTO planoDTO)
         {
-            _planoDomain.Adicionar(AutoMapperManual(plano));
+            var plano = AutoMapperManual(planoDTO);
+            if (!ValidarPlano(plano)) return CustomizacaoResponse();
+
+            _planoDomain.Adicionar(plano);
             await _context.SaveChangesAsync();
             return CustomizacaoResponse();
         }
 
         [HttpPut("planos/id:Guid")]
-        public async Task<IActionResult> AlterarPlano([FromQuery]Guid id, [FromBody] PlanoDTO plano)
+        public async Task<IActionResult> AlterarPlano([FromQuery]Guid id, [FromBody] PlanoDTO planoDTO)
         {
             if (string.IsNullOrEmpty(id.ToString())) return NotFound();
 
-            if (id != plano.Id) return NotFound();
+            if (id != planoDTO.Id) return NotFound();
 
-            _planoDomain.Alterar(AutoMapperManual(plano));
+            var plano = AutoMapperManual(planoDTO);
+            if (!ValidarPlano(plano)) return CustomizacaoResponse();
+
+            _planoDomain.Alterar(plano);
             await _context.SaveChangesAsync();
             return CustomizacaoResponse();
         }
@@ -72,6 +79,14 @@ namespace Unimed.API.Controllers
         {
             return new PlanoDTO { Id = plano.Id, NumeroPlano = plano.NumeroPlano, NomePlano = plano.NomePlano };
         }
-       
+
+        private bool ValidarPlano(Plano plano)
+        {
+            if (plano.EhValido()) return true;
+
+            plano.ValidationResult.Errors.ToList().ForEach(e => AdicionarErroProcessamento(e.ErrorMessage));
+            return false;
+        }
+
     }
 }

@@ -16,6 +16,9 @@ namespace Unimed.API.Repositorio.Data.Mappings
             
             builder.HasOne(c => c.Endereco)
                 .WithOne(c => c.Cliente);
+
+            builder.HasOne(c => c.Plano)
+                .WithOne(c => c.Cliente);
             
             builder.ToTable("Clientes");
         }

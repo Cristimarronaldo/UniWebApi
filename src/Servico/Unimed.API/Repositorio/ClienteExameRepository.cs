@@ -28,12 +28,12 @@ namespace Unimed.API.Repositorio
 
         public Task<ClienteExame> ObterPorId(Guid id)
         {
-            return _context.ClienteExames.FirstOrDefaultAsync(c => c.Id == id);
+            return _context.ClienteExames.Include(c => c.Cliente).Include(c => c.Exame).FirstOrDefaultAsync(c => c.Id == id);
         }
 
         public async Task<IEnumerable<ClienteExame>> ObterTodos()
         {
-            return await _context.ClienteExames.AsNoTracking().ToListAsync();
+            return await _context.ClienteExames.Include(c => c.Cliente).Include(c => c.Exame).AsNoTracking().ToListAsync();
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using FluentValidation;
+using FluentValidation.Results;
+using System;
 using Unimed.API.DomainObjects;
 
 namespace Unimed.API.Models
@@ -29,6 +31,46 @@ namespace Unimed.API.Models
             Cidade = cidade;
             Estado = estado;
             ClienteId = clienteId;
+        }
+
+        public ValidationResult ValidationResult { get; set; }
+
+        public bool EhValido()
+        {
+            ValidationResult = new EnderecoValidation().Validate(this);
+
+            return ValidationResult.IsValid;
+        }
+
+        public class EnderecoValidation : AbstractValidator<Endereco>
+        {
+            public EnderecoValidation()
+            {
+                RuleFor(c => c.Id)
+                    .NotEqual(Guid.Empty)
+                    .WithMessage("Código do Endereço inválido");
+
+                RuleFor(c => c.Logradouro)
+                     .NotEmpty()
+                     .WithMessage("Logradouro não pode está vazio");
+
+                RuleFor(c => c.Numero)
+                    .NotEmpty()
+                    .WithMessage("Número do Logradouro não pode está vazio");
+
+                RuleFor(c => c.Cidade)
+                    .NotEmpty()
+                    .WithMessage("Cidade não pode está vazio");
+
+                RuleFor(c => c.Estado)
+                    .NotEmpty()
+                    .WithMessage("Estado não pode está vazio");
+
+                RuleFor(c => c.Cep)
+                    .NotEmpty()
+                    .WithMessage("CEP não pode está vazio");
+
+            }
         }
     }
 }
